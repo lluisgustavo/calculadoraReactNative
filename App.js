@@ -1,4 +1,3 @@
-import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
 import { 
   StyleSheet, 
@@ -7,12 +6,8 @@ import {
   Button,
   TouchableOpacity
 } from 'react-native';
-import parseErrorStack from 'react-native/Libraries/Core/Devtools/parseErrorStack';
 import { ReloadInstructions } from 'react-native/Libraries/NewAppScreen';
-
-
 export default class App extends Component {
-
   constructor() {
     super()
     this.state = {
@@ -22,45 +17,53 @@ export default class App extends Component {
       calculationText: ""
     }
     //definindo operações
-    this.operations = ['DEL', '+', '-', '*', '/']
+    this.operations = ['DEL', '+', '-', '*', '÷']
   }  
 
   calculateResult(){
     //variavel com o texto do display
     var text = this.state.resultText
     //caso o texto termine com os operadores, não fazer a operação
-    if(text.endsWith('+') || text.endsWith('-') || text.endsWith('*') || text.endsWith('/')) ReloadInstructions
+    if(text.endsWith('+') || text.endsWith('-') || text.endsWith('*') || text.endsWith('÷')) ReloadInstructions
 
     //trocar depois para uma função não eval
-    this.setState({
-      calculationText:eval(text)
-    })
+    if(text.endsWith('%')){
+      let evaluation = eval(text.slice(0, -1))
+      this.setState({
+        calculationText:eval(text.slice(0, -1))/100
+      })
+    } else {
+      this.setState({
+        calculationText:eval(text)
+      })
+    }
   }
 
   buttonPressed(text){
-    this.setState({
+    
+    /*this.setState({
       resultText: this.state.resultText + text
-    })
+    })*/
     switch(text){
-      /*case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+      case '%':
         return(
           this.setState({ 
             resultText: this.state.resultText + text
           })
         )
-        break*/
+        break
       case '=':
-        return this.calculateResult()     
-        break;   
+        return this.calculateResult()    
       case 'C':
         //se o display tiver algum número, reseta (clear)
         if (this.state.resultText.length > 0){
@@ -71,7 +74,7 @@ export default class App extends Component {
             })
           )
         }
-        break;
+        break
       case '.':
         //não deixar multiplos '.' seguidos
         if(this.state.resultText.endsWith('.')) return
@@ -84,15 +87,26 @@ export default class App extends Component {
           })
         }
         break
-      case '⁺∕₋':
-        //verifica se há algum numero
+      case '⁺∕₋': 
+        console.log(parseFloat(this.state.resultText), this.state.resultText.type)
+        //existe numero a ser calculado?
         if(this.state.resultText.length > 0){
+        //verifica se o número é maior ou menor que 0
+        if(parseFloat(this.state.resultText) > 0){
           this.setState({
-            resultText: Math.sign(resultText)
+            resultText: '-' + this.state.resultText
           })
-        }
+        } else if(parseFloat(this.state.resultText) < 0) {
+          this.setState({
+            //retira o primeiro caracter da string resultText
+            resultText: this.state.resultText.substring(1)
+          })
+          console.log('working')
+        } else if(this.state.resultText == '0') return
+        break;
+        
+      }
     }
-    
   }
 
   operate(operation){
@@ -111,15 +125,14 @@ export default class App extends Component {
       case '+':
       case '-':
       case '*':
-      case '/':
+      case '÷':
         //caso as operações forem * ou /
         if(operation === "*" || operation === "/"){
           //checar se tem algum número antes
           if(this.state.resultText == "") return
         }
-
         //não colocar mais de um operador junto, se o .indexOf do último caracter der algum retorno > 0 
-        // significa que o ultimo caracter está constado na array de operações inicialmente construída
+        // significa que o ultimo caracter está constado na array de operações inicialmente construido
         const lastChar = this.state.resultText.split('').pop()
         if(this.operations.indexOf(lastChar) > 0) return
 
@@ -127,7 +140,7 @@ export default class App extends Component {
         this.setState({
           resultText: this.state.resultText + operation
         })
-        break;
+        break
     }
   }
 
@@ -138,19 +151,15 @@ export default class App extends Component {
     for(let i = 0; i < 5; i++){
       let row = []
       for(let j = 0; j < 3; j++){
-        if(!nums[i][j] !== ""){
-        //Renderizando em menos linhas os botões
         row.push(<TouchableOpacity key={nums[i][j]} onPress={() => this.buttonPressed(nums[i][j])} style={styles.btn}>
             <Text style={styles.btnText}>{nums[i][j]}</Text>
           </TouchableOpacity>)
         }
-      }
       rows.push(<View key={i} style={styles.row}>{row}</View>)
     }
 
     let ops = []
     for(let i = 0; i < 5; i++){
-      //Renderizando em menos linhas os botões
       ops.push(<TouchableOpacity key={this.operations[i]} style={styles.btn}>
         <Text onPress={() => this.operate(this.operations[i])} style={styles.btnText}>{this.operations[i]}</Text>
       </TouchableOpacity>)
